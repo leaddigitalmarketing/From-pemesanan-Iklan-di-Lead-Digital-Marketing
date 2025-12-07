@@ -6,309 +6,293 @@
   <title>Form Pemesanan Periklanan - Lead Digital Marketing</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    /* Watermark style for preview/invoice */
-    .invoice-wrap {
-      position: relative;
-      padding: 2rem;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.06);
-    }
+    body{background:#f8f9fa}
+    /* Watermark repeated */
     .watermark {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%) rotate(-25deg);
-      font-size: 72px;
-      color: rgba(0,0,0,0.06);
-      pointer-events: none;
-      user-select: none;
-      white-space: nowrap;
+      position:fixed;
+      top:10%;
+      left:-10%;
+      z-index:0;
+      pointer-events:none;
+      opacity:0.06;
+      font-weight:800;
+      font-size:5rem;
+      color:#000;
+      transform:rotate(-25deg);
+      user-select:none;
+      white-space:nowrap;
     }
-    /* Invoice layout */
-    .invoice-header { display:flex; justify-content:space-between; align-items:center }
-    .small-muted { color: #666; font-size: 0.9rem }
-    /* Make printed PDF look better */
-    @media print {
-      body { background: #fff }
+    /* create several copies */
+    .watermark span{display:block;margin:3rem 0}
+
+    .invoice-sheet{
+      background:#fff;
+      padding:24px;
+      border-radius:8px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.08);
+      position:relative;
+      z-index:1;
     }
+    .small-muted{font-size:.85rem;color:#6c757d}
+    .text-mono{font-family:monospace}
   </style>
 </head>
-<body class="bg-light">
-  <div class="container py-5">
-    <h1 class="mb-4">Form Pemesanan Periklanan - <small class="text-muted">Lead Digital Marketing</small></h1>
+<body>
+  <div class="watermark">
+    <span>Lead Digital Marketing</span>
+    <span>Lead Digital Marketing</span>
+    <span>Lead Digital Marketing</span>
+    <span>Lead Digital Marketing</span>
+    <span>Lead Digital Marketing</span>
+    <span>Lead Digital Marketing</span>
+  </div>
 
-    <div class="card mb-4">
-      <div class="card-body">
-        <form id="orderForm" class="row g-3">
-          <div class="col-md-6">
+  <div class="container py-4">
+    <div class="row">
+      <div class="col-12 col-md-6">
+        <h3>Form Pemesanan Periklanan</h3>
+        <p class="small-muted">Isi data pesanan. Field numeric memiliki batas minimum sesuai ketentuan.</p>
+
+        <form id="orderForm" class="needs-validation" novalidate>
+          <div class="mb-3">
             <label class="form-label">Nama Pemesanan</label>
-            <input type="text" id="nama" class="form-control" required>
+            <input id="namaPemesanan" class="form-control" required>
+            <div class="invalid-feedback">Masukkan nama pemesanan.</div>
           </div>
 
-          <div class="col-md-6">
+          <div class="mb-3">
             <label class="form-label">Paket Iklan (input manual)</label>
-            <input type="text" id="paket" class="form-control" placeholder="Contoh: Paket A - Leads" required>
+            <input id="paketIklan" class="form-control" placeholder="Contoh: Paket Bronze" required>
+            <div class="invalid-feedback">Masukkan nama paket iklan.</div>
           </div>
 
-          <div class="col-md-4">
-            <label class="form-label">Budget Iklan Harian (min 17.000)</label>
-            <input type="number" id="budget" class="form-control" min="17000" value="17000" required>
+          <div class="mb-3">
+            <label class="form-label">Budget Iklan Harian (Rp) — minimal 17.000</label>
+            <input id="budgetHarian" type="number" class="form-control" min="17000" value="17000" required>
+            <div class="invalid-feedback">Budget harian minimal Rp17.000.</div>
           </div>
 
-          <div class="col-md-4">
-            <label class="form-label">Durasi Tayang (hari) (min 3)</label>
-            <input type="number" id="durasi" class="form-control" min="3" value="3" required>
+          <div class="mb-3">
+            <label class="form-label">Durasi Tayang (hari) — minimal 3</label>
+            <input id="durasiTayang" type="number" class="form-control" min="3" value="3" required>
+            <div class="invalid-feedback">Durasi minimal 3 hari.</div>
           </div>
 
-          <div class="col-md-4">
+          <div class="mb-3">
             <label class="form-label">Jasa Setup (otomatis)</label>
-            <input type="text" id="jasaSetupText" class="form-control" readonly>
+            <div class="input-group">
+              <span class="input-group-text">Rp</span>
+              <input id="jasaSetup" class="form-control text-end text-mono" readonly value="50000">
+            </div>
+            <div class="small-muted mt-1">Jasa setup: Rp50.000 untuk durasi 3 hari. Jika durasi &gt; 3, tambahan Rp15.000 per hari.</div>
           </div>
 
-          <div class="col-md-6">
-            <label class="form-label">Total Biaya Iklan (otomatis)</label>
-            <input type="text" id="totalIklanText" class="form-control" readonly>
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">Total Keseluruhan (otomatis)</label>
-            <input type="text" id="totalAllText" class="form-control" readonly>
-          </div>
-
-          <div class="col-12">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" value="" id="showWatermark" checked>
-              <label class="form-check-label" for="showWatermark">Tampilkan watermark "Lead Digital Marketing" pada preview/pdf</label>
+          <div class="mb-3">
+            <label class="form-label">Total Biaya Iklan (budget harian × durasi)</label>
+            <div class="input-group">
+              <span class="input-group-text">Rp</span>
+              <input id="totalBiayaIklan" class="form-control text-end text-mono" readonly value="51000">
             </div>
           </div>
 
-          <div class="col-12 d-flex gap-2">
-            <button type="button" id="btnPreview" class="btn btn-primary">Tampilkan Form Pesanan (Preview)</button>
-            <button type="button" id="btnDownloadPdf" class="btn btn-success">Download PDF (compress)</button>
-            <button type="button" id="btnShare" class="btn btn-outline-primary">Share</button>
-            <button type="reset" class="btn btn-secondary">Reset</button>
+          <div class="mb-3">
+            <label class="form-label">Total Keseluruhan (Total Biaya Iklan + Jasa Setup)</label>
+            <div class="input-group">
+              <span class="input-group-text">Rp</span>
+              <input id="totalKeseluruhan" class="form-control text-end text-mono" readonly value="101000">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <button id="btnShowInvoice" type="button" class="btn btn-primary">Tampilkan Form Pesanan / Buat Invoice</button>
+            <button id="btnReset" type="reset" class="btn btn-outline-secondary ms-2">Reset</button>
           </div>
         </form>
-      </div>
-    </div>
-
-    <div id="previewArea" class="mb-5" style="display:none">
-      <div class="invoice-wrap" id="invoice">
-        <div class="watermark" id="wmText">Lead Digital Marketing</div>
-
-        <div class="invoice-header mb-3">
-          <div>
-            <h4 class="mb-0">Lead Digital Marketing</h4>
-            <div class="small-muted">Form Pemesanan Periklanan</div>
-          </div>
-          <div class="text-end">
-            <strong>Invoice</strong>
-            <div id="invoiceNumber">#0000</div>
-            <div class="small-muted" id="tanggalInvoice"></div>
-          </div>
-        </div>
 
         <hr>
-
-        <div class="row mb-3">
-          <div class="col-sm-6">
-            <div><strong>Nama Pemesanan</strong></div>
-            <div id="pvNama"></div>
-            <div class="small-muted mt-2">Paket Iklan</div>
-            <div id="pvPaket"></div>
-          </div>
-
-          <div class="col-sm-6 text-sm-end">
-            <div class="small-muted">Budget Iklan Harian</div>
-            <div id="pvBudget"></div>
-            <div class="small-muted mt-2">Durasi Tayang</div>
-            <div id="pvDurasi"></div>
-          </div>
-        </div>
-
-        <table class="table table-borderless">
-          <tbody>
-            <tr>
-              <td>Subtotal (Budget harian × Durasi)</td>
-              <td class="text-end" id="pvSubtotal"></td>
-            </tr>
-            <tr>
-              <td>Jasa Setup</td>
-              <td class="text-end" id="pvJasa"></td>
-            </tr>
-            <tr>
-              <th>Total Keseluruhan</th>
-              <th class="text-end" id="pvTotal"></th>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="small-muted">Catatan: Jasa setup dihitung mulai pada durasi 3 hari = 50.000. Jika durasi lebih dari 3 hari, tambahan Rp 15.000 per hari di atas 3 hari.</div>
+        <h6>Informasi Pembayaran</h6>
+        <ul class="list-unstyled small">
+          <li><strong>Sea bank</strong><br>901409728384<br><em>Feri pradana</em></li>
+          <li class="mt-2"><strong>BCA</strong><br>596-509-3068<br><em>FERI PRADANA</em></li>
+          <li class="mt-2"><strong>CIMB NIAGA</strong><br>708601490100<br><em>FERI PRADANA</em></li>
+          <li class="mt-2"><strong>QRIS</strong><br><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjkj_A10jmgfq7lAoNFZckmv1x2Ibh_4W3nMdiSjnUMXwfnlPcRKjC8YVti6HfbqqTjy_En8cNpFkrAwXBt_VWh6TXPOPGtSEWqsnTdVHi602rKOTT34JtLPxc0Gcld9XT6M6Mpsm_iI-CqnrSOfaPvVtuuUne__zAB4of21O96FqlSVr-SX56gwItW5-I8/s320/QRIS.png" alt="QRIS" style="max-width:160px"></li>
+        </ul>
 
       </div>
-    </div>
 
-    <div class="text-muted small">Generated by Lead Digital Marketing - Form Pemesanan</div>
+      <div class="col-12 col-md-6">
+        <h5>Preview Invoice</h5>
+        <div id="invoiceArea" class="invoice-sheet">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h4 class="mb-0">Lead Digital Marketing</h4>
+              <div class="small-muted">Form Pemesanan Periklanan</div>
+            </div>
+            <div class="text-end">
+              <div class="small-muted">Tanggal: <span id="tanggalNow"></span></div>
+              <div class="small-muted">Invoice #: <strong id="invoiceNo" class="text-mono"></strong></div>
+            </div>
+          </div>
+
+          <hr>
+
+          <div>
+            <div><strong>Nama Pemesanan:</strong> <span id="invNama">-</span></div>
+            <div><strong>Paket Iklan:</strong> <span id="invPaket">-</span></div>
+            <div><strong>Budget Harian:</strong> Rp <span id="invBudget" class="text-mono">0</span></div>
+            <div><strong>Durasi:</strong> <span id="invDurasi">0</span> hari</div>
+          </div>
+
+          <hr>
+
+          <table class="table table-borderless">
+            <tbody>
+              <tr>
+                <td>Total Biaya Iklan</td>
+                <td class="text-end">Rp <span id="invTotalBiaya" class="text-mono">0</span></td>
+              </tr>
+              <tr>
+                <td>Jasa Setup</td>
+                <td class="text-end">Rp <span id="invJasaSetup" class="text-mono">0</span></td>
+              </tr>
+              <tr class="border-top">
+                <td><strong>Total Keseluruhan</strong></td>
+                <td class="text-end"><strong>Rp <span id="invTotalKeseluruhan" class="text-mono">0</span></strong></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="mt-3 d-flex justify-content-between align-items-center">
+            <div class="small-muted">Bukti transfer / kwitansi ini dibuat otomatis dari form.</div>
+            <div>
+              <button id="downloadPdf" class="btn btn-success btn-sm">Download PDF (Compressed)</button>
+              <button id="shareBtn" class="btn btn-outline-primary btn-sm ms-1">Share</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- html2pdf CDN (for client-side PDF generation & compression) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script>
-    // Helper: format number to IDR
-    function formatIDR(n){
-      return 'Rp ' + Number(n).toLocaleString('id-ID');
+    // Utilities
+    const fmt = n => Number(n).toLocaleString('id-ID');
+    const el = id => document.getElementById(id);
+
+    // Initial values
+    const today = new Date();
+    el('tanggalNow').textContent = today.toLocaleDateString('id-ID');
+    function genInvoiceNo(){
+      return Math.floor(1000 + Math.random()*9000).toString();
+    }
+    el('invoiceNo').textContent = genInvoiceNo();
+
+    // Calculation logic
+    function calculate(){
+      const budget = Math.max(17000, Number(el('budgetHarian').value || 0));
+      const durasi = Math.max(3, Math.floor(Number(el('durasiTayang').value || 0)));
+      // jasa setup
+      let jasa = 50000;
+      if(durasi>3) jasa = 50000 + (durasi-3)*15000;
+      const totalBiaya = budget * durasi;
+      const totalKes = totalBiaya + jasa;
+
+      el('jasaSetup').value = jasa;
+      el('totalBiayaIklan').value = totalBiaya;
+      el('totalKeseluruhan').value = totalKes;
+
+      // update invoice preview
+      el('invNama').textContent = el('namaPemesanan').value || '-';
+      el('invPaket').textContent = el('paketIklan').value || '-';
+      el('invBudget').textContent = fmt(budget);
+      el('invDurasi').textContent = durasi;
+      el('invTotalBiaya').textContent = fmt(totalBiaya);
+      el('invJasaSetup').textContent = fmt(jasa);
+      el('invTotalKeseluruhan').textContent = fmt(totalKes);
     }
 
-    function calc() {
-      const budget = Math.max(17000, Number(document.getElementById('budget').value || 0));
-      const durasi = Math.max(3, Number(document.getElementById('durasi').value || 0));
-
-      // jasa setup rule
-      let jasa = 0;
-      if (durasi >= 3) {
-        jasa = 50000; // starting for 3 days
-        if (durasi > 3) {
-          jasa += (durasi - 3) * 15000;
-        }
-      }
-
-      const subtotal = budget * durasi;
-      const total = subtotal + jasa;
-
-      document.getElementById('jasaSetupText').value = formatIDR(jasa);
-      document.getElementById('totalIklanText').value = formatIDR(subtotal);
-      document.getElementById('totalAllText').value = formatIDR(total);
-
-      return {budget, durasi, jasa, subtotal, total};
-    }
-
-    // Update calculations when inputs change
-    ['budget','durasi'].forEach(id => {
-      document.getElementById(id).addEventListener('input', () => calc());
+    // Attach events
+    ['budgetHarian','durasiTayang','namaPemesanan','paketIklan'].forEach(id=>{
+      el(id).addEventListener('input', calculate);
     });
 
-    // Generate 4-digit invoice number
-    function genInvoiceNumber(){
-      return Math.floor(1000 + Math.random() * 9000).toString();
-    }
+    // Form validation & show invoice
+    const form = document.getElementById('orderForm');
+    form.addEventListener('submit', e=>{e.preventDefault();});
 
-    document.getElementById('btnPreview').addEventListener('click', function(){
-      const form = document.getElementById('orderForm');
-      if (!form.checkValidity()) {
-        form.reportValidity();
+    el('btnShowInvoice').addEventListener('click', ()=>{
+      if(!form.checkValidity()){
+        form.classList.add('was-validated');
         return;
       }
-
-      const {budget,durasi,jasa,subtotal,total} = calc();
-
-      document.getElementById('pvNama').innerText = document.getElementById('nama').value;
-      document.getElementById('pvPaket').innerText = document.getElementById('paket').value;
-      document.getElementById('pvBudget').innerText = formatIDR(budget) + ' / hari';
-      document.getElementById('pvDurasi').innerText = durasi + ' hari';
-      document.getElementById('pvSubtotal').innerText = formatIDR(subtotal);
-      document.getElementById('pvJasa').innerText = formatIDR(jasa);
-      document.getElementById('pvTotal').innerText = formatIDR(total);
-
-      const inv = genInvoiceNumber();
-      document.getElementById('invoiceNumber').innerText = '#' + inv;
-      document.getElementById('tanggalInvoice').innerText = new Date().toLocaleString('id-ID');
-
-      // watermark toggle
-      const wm = document.getElementById('wmText');
-      wm.style.display = document.getElementById('showWatermark').checked ? 'block' : 'none';
-
-      document.getElementById('previewArea').style.display = 'block';
-      // scroll to preview
-      document.getElementById('previewArea').scrollIntoView({behavior:'smooth'});
+      // regenerate invoice number and recalc
+      el('invoiceNo').textContent = genInvoiceNo();
+      calculate();
+      // scroll to invoice
+      document.getElementById('invoiceArea').scrollIntoView({behavior:'smooth'});
     });
 
-    // Download PDF using html2canvas + jsPDF
-    document.getElementById('btnDownloadPdf').addEventListener('click', async function(){
-      const pv = document.getElementById('previewArea');
-      // ensure preview shown and form valid
-      const form = document.getElementById('orderForm');
-      if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-      }
-      // Recreate preview to update invoice number and data
-      document.getElementById('btnPreview').click();
-
-      const invoiceEl = document.getElementById('invoice');
-
-      // temporarily set a white background for canvas capture
-      const originalBg = invoiceEl.style.background;
-      invoiceEl.style.background = '#ffffff';
-
-      // Use html2canvas
-      const canvas = await html2canvas(invoiceEl, {scale: 2, useCORS: true});
-      const imgData = canvas.toDataURL('image/jpeg', 0.9);
-
-      // Create jsPDF and add image
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({orientation: 'portrait', unit: 'pt', format: 'a4'});
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
-      // Calculate image size to fit width
-      const imgWidth = pageWidth - 40; // margins
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      pdf.addImage(imgData, 'JPEG', 20, 20, imgWidth, imgHeight);
-
-      // Save (compressed) PDF
-      pdf.save('Invoice_' + document.getElementById('invoiceNumber').innerText.replace('#','') + '.pdf');
-
-      // restore
-      invoiceEl.style.background = originalBg;
+    el('btnReset').addEventListener('click', ()=>{
+      setTimeout(()=>{
+        el('invoiceNo').textContent = genInvoiceNo();
+        calculate();
+      },10);
     });
 
-    // Share (Web Share API) - share PDF blob if available
-    document.getElementById('btnShare').addEventListener('click', async function(){
-      const form = document.getElementById('orderForm');
-      if (!form.checkValidity()) { form.reportValidity(); return; }
-      document.getElementById('btnPreview').click();
-      const invoiceEl = document.getElementById('invoice');
+    // PDF generation (compressed)
+    async function generatePdf(options){
+      const element = document.getElementById('invoiceArea');
+      // default options tuned for compression
+      const opt = Object.assign({
+        margin: 10,
+        filename: 'invoice_'+el('invoiceNo').textContent+'.pdf',
+        image: { type: 'jpeg', quality: 0.6 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }, options || {});
 
-      // capture
-      const canvas = await html2canvas(invoiceEl, {scale: 2, useCORS: true});
-      const imgData = canvas.toDataURL('image/jpeg', 0.9);
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({orientation: 'portrait', unit: 'pt', format: 'a4'});
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const imgWidth = pageWidth - 40;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      pdf.addImage(imgData, 'JPEG', 20, 20, imgWidth, imgHeight);
+      // return a blob via promise
+      return await html2pdf().from(element).set(opt).outputPdf('blob');
+    }
 
-      const arrayBuf = pdf.output('arraybuffer');
-      const blob = new Blob([arrayBuf], { type: 'application/pdf' });
-
-      // Use Web Share if available
-      if (navigator.canShare && navigator.canShare({ files: [new File([blob], 'invoice.pdf', {type:'application/pdf'})] })) {
-        const file = new File([blob], 'invoice.pdf', { type: 'application/pdf' });
-        try {
-          await navigator.share({ files: [file], title: 'Invoice Pemesanan', text: 'Invoice dari Lead Digital Marketing' });
-        } catch (err) {
-          alert('Gagal membagikan: ' + err.message);
-        }
-      } else {
-        // Fallback: prompt download
+    el('downloadPdf').addEventListener('click', async ()=>{
+      try{
+        const blob = await generatePdf();
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = 'invoice.pdf';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+        a.href = url; a.download = 'invoice_'+el('invoiceNo').textContent+'.pdf';
+        document.body.appendChild(a); a.click(); a.remove();
         URL.revokeObjectURL(url);
-        alert('Perangkat Anda tidak mendukung berbagi langsung. File PDF telah diunduh.');
+      }catch(err){
+        alert('Gagal membuat PDF: '+err.message);
       }
     });
 
-    // initial calc
-    calc();
+    el('shareBtn').addEventListener('click', async ()=>{
+      try{
+        const blob = await generatePdf();
+        const filesArray = [new File([blob], 'invoice_'+el('invoiceNo').textContent+'.pdf', {type: 'application/pdf'})];
+        if(navigator.canShare && navigator.canShare({files: filesArray})){
+          await navigator.share({files: filesArray, title: 'Invoice '+el('invoiceNo').textContent, text: 'Invoice dari Lead Digital Marketing'});
+        } else {
+          // fallback: download
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = url; a.download = 'invoice_'+el('invoiceNo').textContent+'.pdf';
+          document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+          alert('Perangkat Anda tidak mendukung Web Share API untuk file. PDF diunduh sebagai gantinya.');
+        }
+      }catch(err){
+        alert('Gagal share PDF: '+err.message);
+      }
+    });
+
+    // initial calculate
+    calculate();
   </script>
 </body>
 </html>
