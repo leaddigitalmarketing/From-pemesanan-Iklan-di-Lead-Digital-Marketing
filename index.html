@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Form Pemesanan Periklanan - Lead Digital Marketing</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Watermark styles for preview / PDF area */
+    .order-preview {
+      position: relative;
+      padding: 2rem;
+      border: 1px solid #e6e6e6;
+      border-radius: 8px;
+      background: #fff;
+      min-height: 320px;
+    }
+    .watermark {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 48px;
+      font-weight: 700;
+      color: rgba(0,0,0,0.07);
+      pointer-events: none;
+      user-select: none;
+      white-space: nowrap;
+    }
+    /* small print-friendly tweaks */
+    @media print {
+      body * { visibility: hidden; }
+      #printable, #printable * { visibility: visible; }
+      #printable { position: absolute; left: 0; top: 0; }
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h3 class="card-title mb-3">Form Pemesanan Periklanan Digital <small class="text-muted">Lead Digital Marketing</small></h3>
+
+            <form id="orderForm" onsubmit="return false;">
+              <div class="mb-3">
+                <label class="form-label">Nama Pemesanan</label>
+                <input id="name" class="form-control" placeholder="Nama pemesanan" required>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Paket Iklan (input manual)</label>
+                <input id="paket" class="form-control" placeholder="Contoh: Paket Bronze / Paket Custom" required>
+              </div>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Budget Iklan Harian (Rp)</label>
+                  <input id="budget" type="number" class="form-control" min="17000" step="1000" value="17000" required>
+                  <div class="form-text">Minimal Rp 17.000 / hari.</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Durasi Tayang (hari)</label>
+                  <input id="durasi" type="number" class="form-control" min="3" step="1" value="3" required>
+                  <div class="form-text">Minimal 3 hari.</div>
+                </div>
+              </div>
+
+              <div class="mt-3">
+                <label class="form-label">Jasa Setup (otomatis dihitung)</label>
+                <input id="jasaSetup" class="form-control" readonly>
+                <div class="form-text">Aturan: mulai di 3 hari = Rp 50.000. Jika durasi &gt; 3 hari, tambahkan Rp 15.000 per hari tambahan.</div>
+              </div>
+
+              <div class="row g-3 mt-3">
+                <div class="col-md-6">
+                  <label class="form-label">Total Biaya Iklan (Rp)</label>
+                  <input id="totalIklan" class="form-control" readonly>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Total Keseluruhan (Rp)</label>
+                  <input id="totalAll" class="form-control" readonly>
+                </div>
+              </div>
+
+              <div class="d-flex gap-2 mt-4">
+                <button id="showOrder" class="btn btn-primary" type="button">Tampilkan Form Pesanan</button>
+                <button id="downloadPdf" class="btn btn-outline-secondary" type="button">Download PDF</button>
+                <button id="shareBtn" class="btn btn-outline-success" type="button">Share (jika tersedia)</button>
+                <button id="resetBtn" class="btn btn-link text-danger" type="button">Reset</button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+
+        <div class="mt-4" id="previewContainer" style="display:none;">
+          <h5>Preview Pesanan</h5>
+          <div class="order-preview" id="printable">
+            <div class="watermark">Lead Digital Marketing</div>
+
+            <div class="mb-2"><strong>Nama Pemesanan:</strong> <span id="pv_name"></span></div>
+            <div class="mb-2"><strong>Paket Iklan:</strong> <span id="pv_paket"></span></div>
+            <div class="mb-2"><strong>Budget Harian:</strong> Rp <span id="pv_budget"></span></div>
+            <div class="mb-2"><strong>Durasi Tayang:</strong> <span id="pv_durasi"></span> hari</div>
+            <div class="mb-2"><strong>Jasa Setup:</strong> Rp <span id="pv_setup"></span></div>
+            <div class="mb-2"><strong>Total Biaya Iklan:</strong> Rp <span id="pv_totaliklan"></span></div>
+            <hr>
+            <div class="mb-2"><strong>Total Keseluruhan:</strong> Rp <span id="pv_totalall" style="font-size:1.25rem"></span></div>
+
+            <div class="mt-3 text-muted small">Dicetak: <span id="pv_date"></span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+    // Utilities
+    const fmt = new Intl.NumberFormat('id-ID');
+
+    function calcSetup(durasi){
+      const base = 50000;
+      const extraPerDay = 15000;
+      if(durasi <= 3) return base;
+      return base + (durasi - 3) * extraPerDay;
+    }
+
+    function updateTotals(){
+      const budget = Number(document.getElementById('budget').value || 0);
+      let durasi = Number(document.getElementById('durasi').value || 0);
+
+      // enforce minimums
+      if(budget < 17000) document.getElementById('budget').value = 17000;
+      if(durasi < 3) document.getElementById('durasi').value = 3;
+
+      durasi = Number(document.getElementById('durasi').value);
+
+      const jasa = calcSetup(durasi);
+      const totalIklan = budget * durasi;
+      const totalAll = totalIklan + jasa;
+
+      document.getElementById('jasaSetup').value = 'Rp ' + fmt.format(jasa);
+      document.getElementById('totalIklan').value = 'Rp ' + fmt.format(totalIklan);
+      document.getElementById('totalAll').value = 'Rp ' + fmt.format(totalAll);
+
+      // store for preview
+      document.getElementById('pv_budget').textContent = fmt.format(budget);
+      document.getElementById('pv_durasi').textContent = durasi;
+      document.getElementById('pv_setup').textContent = fmt.format(jasa);
+      document.getElementById('pv_totaliklan').textContent = fmt.format(totalIklan);
+      document.getElementById('pv_totalall').textContent = fmt.format(totalAll);
+    }
+
+    // initial update
+    updateTotals();
+
+    document.getElementById('budget').addEventListener('input', updateTotals);
+    document.getElementById('durasi').addEventListener('input', updateTotals);
+
+    document.getElementById('showOrder').addEventListener('click', ()=>{
+      const name = document.getElementById('name').value.trim();
+      const paket = document.getElementById('paket').value.trim();
+      if(!name || !paket){
+        alert('Mohon isi Nama Pemesanan dan Paket Iklan terlebih dahulu.');
+        return;
+      }
+      // fill preview textual fields
+      document.getElementById('pv_name').textContent = name;
+      document.getElementById('pv_paket').textContent = paket;
+      document.getElementById('pv_date').textContent = new Date().toLocaleString('id-ID');
+
+      document.getElementById('previewContainer').style.display = 'block';
+      // recalc just in case
+      updateTotals();
+      // scroll to preview
+      document.getElementById('previewContainer').scrollIntoView({behavior:'smooth'});
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', ()=>{
+      document.getElementById('orderForm').reset();
+      document.getElementById('budget').value = 17000;
+      document.getElementById('durasi').value = 3;
+      updateTotals();
+      document.getElementById('previewContainer').style.display = 'none';
+    });
+
+    // Download PDF using html2canvas + jsPDF
+    async function generatePdf(compress=true){
+      const el = document.getElementById('printable');
+      // temporarily remove watermark pointer events (already none) and adjust scale for quality/compression
+      const scale = compress ? 1.2 : 2; // higher scale = higher quality (bigger pdf)
+
+      const canvas = await html2canvas(el, {scale: scale});
+      const imgData = canvas.toDataURL('image/jpeg', compress ? 0.7 : 0.95);
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      // calculate image size to fit A4
+      const imgWidth = pageWidth - 40; // margin
+      const ratio = canvas.width / canvas.height;
+      const imgHeight = imgWidth / ratio;
+
+      pdf.addImage(imgData, 'JPEG', 20, 20, imgWidth, imgHeight);
+      return pdf;
+    }
+
+    document.getElementById('downloadPdf').addEventListener('click', async ()=>{
+      // ensure preview visible
+      if(document.getElementById('previewContainer').style.display === 'none'){
+        alert('Silakan tampilkan form pesanan terlebih dahulu dengan menekan "Tampilkan Form Pesanan"');
+        return;
+      }
+      try{
+        const pdf = await generatePdf(true);
+        pdf.save('Form-Pemesanan-Lead-Digital-Marketing.pdf');
+      }catch(err){
+        console.error(err);
+        alert('Gagal membuat PDF: '+err.message);
+      }
+    });
+
+    document.getElementById('shareBtn').addEventListener('click', async ()=>{
+      if(typeof navigator.share === 'undefined'){
+        alert('Fitur share tidak tersedia di browser ini. Anda tetap dapat mengunduh PDF.');
+        return;
+      }
+      if(document.getElementById('previewContainer').style.display === 'none'){
+        alert('Silakan tampilkan form pesanan terlebih dahulu dengan menekan "Tampilkan Form Pesanan"');
+        return;
+      }
+
+      try{
+        const pdf = await generatePdf(true);
+        const pdfBlob = pdf.output('blob');
+        const filesArray = [new File([pdfBlob], 'Form-Pemesanan-Lead-Digital-Marketing.pdf', { type: 'application/pdf' })];
+        await navigator.share({ files: filesArray, title: 'Form Pemesanan', text: 'Form pemesanan dari Lead Digital Marketing' });
+      }catch(err){
+        console.error(err);
+        alert('Gagal melakukan share: '+err.message);
+      }
+    });
+
+  </script>
+</body>
+</html>
